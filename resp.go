@@ -12,7 +12,7 @@ const (
 	STRING  = '+'
 	ERROR   = '-'
 	INTEGER = ':'
-	BULK    = '$'
+	BULK    = '$' // BULK STRING
 )
 
 type Value struct {
@@ -47,7 +47,7 @@ func (r *Resp) readLine() (line []byte, n int, err error) {
 	return line[:len(line)-2], n, nil
 }
 
-func (r *Resp) readIntegrer() (x int, n int, err error) {
+func (r *Resp) readInteger() (x int, n int, err error) {
 	line, n, err := r.readLine()
 	if err != nil {
 		return 0, 0, err
@@ -57,4 +57,65 @@ func (r *Resp) readIntegrer() (x int, n int, err error) {
 		return 0, 0, err
 	}
 	return int(i64), n, nil
+}
+
+func (r *Resp) Read() (Value, error) {
+	_type, err := r.reader.ReadByte()
+	if err != nil {
+		fmt.Println(err)
+		return Value{}, err
+	}
+	switch _type {
+	case ARRAY:
+		fmt.Printf("\nArray: %c", _type)
+		return r.readArray()
+	case BULK:
+		fmt.Printf("\nBulk: %c", _type)
+		return r.readBulk()
+	default:
+		fmt.Printf("Unknown type: %v", string(_type))
+		return Value{}, nil
+	}
+}
+
+func (r *Resp) readArray() (Value, error) {
+	v := Value{}
+	v.typ = "array"
+
+	len, _, err := r.readInteger()
+	if err != nil {
+		fmt.Println(err)
+		return v, err
+	}
+	for i := 0; i < len; i++ {
+		val, err := r.Read()
+		if err != nil {
+			fmt.Println(err)
+			return v, err
+		}
+		v.array = append(v.array, val)
+	}
+
+	return v, nil
+}
+
+func (r *Resp) readBulk() (Value, error) {
+	v := Value{}
+
+	v.typ = "bulk"
+
+	len, _, err := r.readInteger()
+	if err != nil {
+		return v, err
+	}
+
+	bulk := make([]byte, len)
+
+	r.reader.Read(bulk)
+
+	v.bulk = string(bulk)
+
+	r.readLine()
+
+	return v, nil
 }
