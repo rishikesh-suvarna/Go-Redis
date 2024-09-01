@@ -68,10 +68,8 @@ func (r *Resp) Read() (Value, error) {
 	}
 	switch _type {
 	case ARRAY:
-		fmt.Printf("\nArray: %c", _type)
 		return r.readArray()
 	case BULK:
-		fmt.Printf("\nBulk: %c", _type)
 		return r.readBulk()
 	default:
 		fmt.Printf("Unknown type: %v", string(_type))
