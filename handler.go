@@ -16,7 +16,7 @@ var SETsMutex = sync.RWMutex{}
 
 func set(args []Value) Value {
 	if len(args) != 2 {
-		return Value{typ: "str", str: "Wrong number of args supplied to SET command"}
+		return Value{typ: "error", str: "Wrong number of args supplied to SET command"}
 	}
 
 	key := args[0].bulk
@@ -26,12 +26,12 @@ func set(args []Value) Value {
 	SETs[key] = val
 	SETsMutex.Unlock()
 
-	return Value{typ: "str", str: "OK"}
+	return Value{typ: "string", str: "OK"}
 }
 
 func get(args []Value) Value {
 	if len(args) != 1 {
-		return Value{typ: "str", str: "Wrong number of args supplied to GET command"}
+		return Value{typ: "error", str: "Wrong number of args supplied to GET command"}
 	}
 
 	SETsMutex.RLock()
